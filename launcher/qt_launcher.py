@@ -38,8 +38,7 @@ class GameLauncher(QMainWindow):
             json.dump(config_data, f, indent=4)
 
         project_root = os.path.dirname(os.path.dirname(__file__))
-        # Запускаем через main.py в корне
-        main_script = os.path.join(project_root, "main.py")
+        main_script = os.path.join(project_root, "src", "game.py")
         subprocess.Popen([sys.executable, main_script], cwd=project_root)
         self.close()
 

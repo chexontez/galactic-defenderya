@@ -5,10 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5c0e6d02-3ca8-435d-8e1d-bb3d7064fd1b" name="Changes" comment="Changes">
-      <change beforePath="$PROJECT_DIR$/.idea/galactic-defenderya.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/galactic-defenderya.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/game.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/logs.db" beforeDir="false" afterPath="$PROJECT_DIR$/database/logs.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/launcher/qt_launcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/launcher/qt_launcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/presentation.odp" beforeDir="false" afterPath="$PROJECT_DIR$/presentation.odp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -158,7 +158,15 @@
       <option name="project" value="LOCAL" />
       <updated>1770201564671</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Changes">
+      <option name="closed" value="true" />
+      <created>1770211953139</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1770211953139</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

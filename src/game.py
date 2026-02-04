@@ -97,7 +97,6 @@ class GalacticDefender(arcade.Window):
         arcade.draw_lrbt_rectangle_filled(0, SCREEN_WIDTH, 0, UI_HEIGHT, COLOR_HUD)
         arcade.draw_line(0, UI_HEIGHT, SCREEN_WIDTH, UI_HEIGHT, arcade.color.GRAY, 2)
 
-        # Отрисовка обновляемых текстов
         self.ui_text_hp.text = f"HP: {self.player_sprite.hp}"
         self.ui_text_hp.draw()
 
@@ -107,25 +106,20 @@ class GalacticDefender(arcade.Window):
         self.ui_text_time.text = f"ВРЕМЯ: {int(self.game_time)}"
         self.ui_text_time.draw()
 
-        # HEAT BAR
         self.lbl_heat.draw()
         arcade.draw_lrbt_rectangle_outline(350, 450, 30, 45, arcade.color.WHITE, 1)
         heat_pct = min(self.player_sprite.heat / MAX_HEAT, 1.0)
 
         if heat_pct > 0:
-            # Исправленная логика: ширина внутренней части ~98px.
-            # Добавляем ширину к левому краю, без вычитания.
             fill_w = 98 * heat_pct
             c = arcade.color.RED if self.player_sprite.overheated else COLOR_HEAT_BAR
             arcade.draw_lrbt_rectangle_filled(351, 351 + fill_w, 31, 44, c)
 
-        # SUPER BAR
         self.lbl_super.draw()
         arcade.draw_lrbt_rectangle_outline(500, 600, 30, 45, arcade.color.WHITE, 1)
         super_pct = min(self.player_sprite.super_shot_timer / SUPER_SHOT_COOLDOWN, 1.0)
 
         if super_pct > 0:
-            # Исправленная логика
             fill_w = 98 * super_pct
             arcade.draw_lrbt_rectangle_filled(501, 501 + fill_w, 31, 44, COLOR_SUPER_BAR)
 
@@ -234,12 +228,10 @@ class GalacticDefender(arcade.Window):
                 if self.player_sprite.hp <= 0:
                     self.game_over()
 
-            # Анимация фона
             for s in self.stars:
                 s[1] -= s[2]
                 if s[1] < 0: s[1] = SCREEN_HEIGHT
 
-            # Стрельба врагов
             for enemy in self.enemy_list:
                 if enemy.shoot():
                     bullet = Bullet(enemy.center_x, enemy.bottom, is_enemy=True)

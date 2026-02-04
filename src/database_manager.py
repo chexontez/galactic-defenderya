@@ -3,7 +3,6 @@ from datetime import datetime
 from src.constants import DB_PATH
 
 def init_db():
-    """Создает таблицу логов, если она еще не существует."""
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("""
@@ -18,7 +17,6 @@ def init_db():
         conn.commit()
 
 def save_game_result(duration, kills, super_shots):
-    """Сохраняет итоги игры в базу."""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -29,7 +27,6 @@ def save_game_result(duration, kills, super_shots):
         conn.commit()
 
 def get_all_logs():
-    """Возвращает список всех прошлых игр."""
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         # Берем последние 10 игр для отображения

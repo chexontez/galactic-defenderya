@@ -5,7 +5,6 @@ from src.constants import *
 
 class Asteroid(arcade.Sprite):
     def __init__(self):
-        # Используем спрайт meteorit.png
         super().__init__(str(IMAGES_DIR / "meteorit.png"), scale=random.uniform(0.5, 1.2))
 
         self.center_x = random.randint(50, SCREEN_WIDTH - 50)

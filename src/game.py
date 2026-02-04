@@ -5,22 +5,29 @@ from src.database_manager import save_game_result, get_all_logs, init_db
 from src.player import Player
 from src.bullet import Bullet
 from src.enemy import Enemy
+from src.asteroid import Asteroid
 
-
-# (Если нужен астероид, создай аналогичный файл src/asteroid.py, пока заглушка в коде)
 
 class GalacticDefender(arcade.Window):
     def __init__(self):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, resizable=False)
         init_db()
 
-        # Текстовые объекты (оптимизация)
         self.ui_text_hp = arcade.Text("", 20, 45, arcade.color.WHITE, 14, bold=True)
         self.ui_text_score = arcade.Text("", 120, 45, arcade.color.WHITE, 14, bold=True)
         self.ui_text_time = arcade.Text("", 250, 45, arcade.color.WHITE, 14, bold=True)
 
-        # Размеры кнопок меню для кликов
-        self.btn_play_rect = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, 200, 50)  # x, y, w, h
+        self.lbl_heat = arcade.Text("HEAT", 400, 55, arcade.color.WHITE, 10, anchor_x="center")
+        self.lbl_super = arcade.Text("SUPER", 550, 55, arcade.color.WHITE, 10, anchor_x="center")
+
+        self.lbl_title = arcade.Text("GALACTIC DEFENDER", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100,
+                                     arcade.color.CYAN, 40, anchor_x="center", bold=True)
+        self.lbl_paused = arcade.Text("ПАУЗА", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
+                                      arcade.color.WHITE, 40, anchor_x="center")
+        self.lbl_gameover = arcade.Text("GAME OVER", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30,
+                                        arcade.color.RED, 50, anchor_x="center", bold=True)
+
+        self.btn_play_rect = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, 200, 50)
         self.btn_logs_rect = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 70, 200, 50)
         self.btn_exit_rect = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 140, 200, 50)
 
@@ -48,6 +55,7 @@ class GalacticDefender(arcade.Window):
         self.game_time = 0.0
         self.super_shots_fired = 0
         self.enemy_timer = 0
+        self.asteroid_timer = 0
         self.logs_data = get_all_logs()
 
         self.player_list = arcade.SpriteList()
@@ -66,7 +74,6 @@ class GalacticDefender(arcade.Window):
     def on_draw(self):
         self.clear()
 
-        # Фон
         for s in self.stars:
             arcade.draw_circle_filled(s[0], s[1], s[2], arcade.color.WHITE)
 
@@ -87,11 +94,10 @@ class GalacticDefender(arcade.Window):
             self.draw_game_over_screen()
 
     def draw_ui(self):
-        # Панель (Left, Right, Bottom, Top)
         arcade.draw_lrbt_rectangle_filled(0, SCREEN_WIDTH, 0, UI_HEIGHT, COLOR_HUD)
         arcade.draw_line(0, UI_HEIGHT, SCREEN_WIDTH, UI_HEIGHT, arcade.color.GRAY, 2)
 
-        # Текст
+        # Отрисовка обновляемых текстов
         self.ui_text_hp.text = f"HP: {self.player_sprite.hp}"
         self.ui_text_hp.draw()
 
@@ -101,29 +107,30 @@ class GalacticDefender(arcade.Window):
         self.ui_text_time.text = f"ВРЕМЯ: {int(self.game_time)}"
         self.ui_text_time.draw()
 
-        # --- Шкала Нагрева (HEAT) ---
-        arcade.draw_text("HEAT", 400, 55, arcade.color.WHITE, 10, anchor_x="center")
-        # Рамка
+        # HEAT BAR
+        self.lbl_heat.draw()
         arcade.draw_lrbt_rectangle_outline(350, 450, 30, 45, arcade.color.WHITE, 1)
-        # Заливка
         heat_pct = min(self.player_sprite.heat / MAX_HEAT, 1.0)
-        if heat_pct > 0:
-            fill_w = 100 * heat_pct
-            c = arcade.color.RED if self.player_sprite.overheated else COLOR_HEAT_BAR
-            arcade.draw_lrbt_rectangle_filled(351, 351 + fill_w - 2, 31, 44, c)
 
-        # --- Шкала Супер-выстрела (SUPER) ---
-        arcade.draw_text("SUPER", 550, 55, arcade.color.WHITE, 10, anchor_x="center")
+        if heat_pct > 0:
+            # Исправленная логика: ширина внутренней части ~98px.
+            # Добавляем ширину к левому краю, без вычитания.
+            fill_w = 98 * heat_pct
+            c = arcade.color.RED if self.player_sprite.overheated else COLOR_HEAT_BAR
+            arcade.draw_lrbt_rectangle_filled(351, 351 + fill_w, 31, 44, c)
+
+        # SUPER BAR
+        self.lbl_super.draw()
         arcade.draw_lrbt_rectangle_outline(500, 600, 30, 45, arcade.color.WHITE, 1)
         super_pct = min(self.player_sprite.super_shot_timer / SUPER_SHOT_COOLDOWN, 1.0)
+
         if super_pct > 0:
-            fill_w = 100 * super_pct
-            arcade.draw_lrbt_rectangle_filled(501, 501 + fill_w - 2, 31, 44, COLOR_SUPER_BAR)
+            # Исправленная логика
+            fill_w = 98 * super_pct
+            arcade.draw_lrbt_rectangle_filled(501, 501 + fill_w, 31, 44, COLOR_SUPER_BAR)
 
     def draw_menu(self):
-        arcade.draw_text("GALACTIC DEFENDER", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100,
-                         arcade.color.CYAN, 40, anchor_x="center", bold=True)
-
+        self.lbl_title.draw()
         self._draw_btn(self.btn_play_rect, "ИГРАТЬ")
         self._draw_btn(self.btn_logs_rect, "ИСТОРИЯ")
         self._draw_btn(self.btn_exit_rect, "ВЫХОД")
@@ -136,23 +143,20 @@ class GalacticDefender(arcade.Window):
 
     def draw_stats_screen(self):
         arcade.draw_text("ИСТОРИЯ ИГР", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 80, arcade.color.WHITE, 30, anchor_x="center")
-
         y = SCREEN_HEIGHT - 150
         if not self.logs_data:
             arcade.draw_text("Пусто...", SCREEN_WIDTH / 2, y, arcade.color.GRAY, 14, anchor_x="center")
 
         for i, log in enumerate(self.logs_data[:5]):
-            # log: id, played_at, duration, kills, super_shots
             row = f"{log[0]} | {int(log[1])} сек | Убито: {log[2]}"
             arcade.draw_text(row, SCREEN_WIDTH / 2, y - (i * 30), arcade.color.YELLOW, 12, anchor_x="center")
-
         arcade.draw_text("ESC - Назад", SCREEN_WIDTH / 2, 50, arcade.color.GRAY, 10, anchor_x="center")
 
     def on_mouse_press(self, x, y, button, modifiers):
         if self.game_state == "MENU":
             if self._is_click(x, y, self.btn_play_rect):
+                self.setup()
                 self.game_state = "PLAYING"
-                self.score = 0  # Сброс счета при рестарте
             elif self._is_click(x, y, self.btn_logs_rect):
                 self.logs_data = get_all_logs()
                 self.game_state = "STATS"
@@ -167,54 +171,79 @@ class GalacticDefender(arcade.Window):
         if self.game_state == "PLAYING":
             self.game_time += delta_time
             self.enemy_timer += delta_time
+            self.asteroid_timer += delta_time
 
-            # Обновление спрайтов (Player требует delta_time)
             self.player_list.update(delta_time)
-            self.enemy_list.update()
-            self.bullet_list.update()
+            self.enemy_list.update(delta_time)
+            self.bullet_list.update(delta_time)
+            self.asteroid_list.update(delta_time)
 
-            # Спавн врагов
             if self.enemy_timer > ENEMY_SPAWN_RATE:
                 self.enemy_list.append(Enemy())
                 self.enemy_timer = 0
 
-            # Коллизии: Пули -> Враги
-            for bullet in self.bullet_list:
-                hit_list = arcade.check_for_collision_with_list(bullet, self.enemy_list)
-                if hit_list:
-                    bullet.kill()
-                    for enemy in hit_list:
-                        if enemy.take_damage(bullet.damage):  # Если умер
-                            self.score += 10
-                            if self.snd_hit_enemy: arcade.play_sound(self.snd_hit_enemy)
+            if self.asteroid_timer > ASTEROID_SPAWN_RATE:
+                self.asteroid_list.append(Asteroid())
+                self.asteroid_timer = 0
 
-            # Коллизии: Враги -> Игрок
+            for bullet in self.bullet_list:
+                if not bullet.is_enemy:
+                    hit_list = arcade.check_for_collision_with_list(bullet, self.enemy_list)
+                    if hit_list:
+                        bullet.kill()
+                        for enemy in hit_list:
+                            if enemy.take_damage(bullet.damage):
+                                self.score += 10
+                                if self.snd_hit_enemy: arcade.play_sound(self.snd_hit_enemy)
+
+                    hit_ast = arcade.check_for_collision_with_list(bullet, self.asteroid_list)
+                    if hit_ast:
+                        bullet.kill()
+                        for ast in hit_ast:
+                            if ast.take_damage(bullet.damage):
+                                self.score += 5
+                                if self.snd_hit_enemy: arcade.play_sound(self.snd_hit_enemy)
+
+                else:
+                    if arcade.check_for_collision(bullet, self.player_sprite):
+                        bullet.kill()
+                        self.player_sprite.hp -= 1
+                        self.player_sprite.color = (255, 0, 0)
+                        self.player_sprite.flash_timer = 0.2
+                        if self.snd_hit_ship: arcade.play_sound(self.snd_hit_ship)
+                        if self.player_sprite.hp <= 0:
+                            self.game_over()
+
             hit_player = arcade.check_for_collision_with_list(self.player_sprite, self.enemy_list)
             for enemy in hit_player:
                 enemy.kill()
                 self.player_sprite.hp -= 1
+                self.player_sprite.color = (255, 0, 0)
+                self.player_sprite.flash_timer = 0.2
                 if self.snd_hit_ship: arcade.play_sound(self.snd_hit_ship)
                 if self.player_sprite.hp <= 0:
                     self.game_over()
-
-            # Анимация звезд
-            for s in self.stars:
-                s[1] -= s[2]
-                if s[1] < 0: s[1] = SCREEN_HEIGHT
-
-            # стрельба
-            for enemy in self.enemy_list:
-                if enemy.shoot():
-                    bullet = Bullet(enemy.center_x, enemy.bottom, is_enemy=True)
-                    self.bullet_list.append(bullet)
 
             asteroids_hit = arcade.check_for_collision_with_list(self.player_sprite, self.asteroid_list)
             for asteroid in asteroids_hit:
                 self.player_sprite.hp -= 2
                 asteroid.kill()
-                # Эффект красного мигания
                 self.player_sprite.color = (255, 0, 0)
-                # Нужно добавить таймер в Player, чтобы через 1 сек вернуть цвет (255,255,255)
+                self.player_sprite.flash_timer = 0.2
+                if self.snd_hit_ship: arcade.play_sound(self.snd_hit_ship)
+                if self.player_sprite.hp <= 0:
+                    self.game_over()
+
+            # Анимация фона
+            for s in self.stars:
+                s[1] -= s[2]
+                if s[1] < 0: s[1] = SCREEN_HEIGHT
+
+            # Стрельба врагов
+            for enemy in self.enemy_list:
+                if enemy.shoot():
+                    bullet = Bullet(enemy.center_x, enemy.bottom, is_enemy=True)
+                    self.bullet_list.append(bullet)
 
     def on_key_press(self, key, modifiers):
         if self.game_state == "PLAYING":
@@ -230,12 +259,9 @@ class GalacticDefender(arcade.Window):
                     if self.snd_shoot: arcade.play_sound(self.snd_shoot)
             elif key == arcade.key.X:
                 if self.player_sprite.super_shot_timer >= SUPER_SHOT_COOLDOWN:
-                    # Супер выстрел (3 пули)
-                    self.bullet_list.append(Bullet(self.player_sprite.center_x, self.player_sprite.top, is_super=True))
-                    self.bullet_list.append(
-                        Bullet(self.player_sprite.center_x - 20, self.player_sprite.top - 10, is_super=True))
-                    self.bullet_list.append(
-                        Bullet(self.player_sprite.center_x + 20, self.player_sprite.top - 10, is_super=True))
+                    for offset in [0, -20, 20]:
+                        self.bullet_list.append(
+                            Bullet(self.player_sprite.center_x + offset, self.player_sprite.top, is_super=True))
 
                     if self.snd_super: arcade.play_sound(self.snd_super)
                     self.player_sprite.super_shot_timer = 0
@@ -249,6 +275,7 @@ class GalacticDefender(arcade.Window):
         elif self.game_state == "GAME_OVER":
             if key == arcade.key.ENTER:
                 self.setup()
+                self.game_state = "PLAYING"
             elif key == arcade.key.ESCAPE:
                 self.game_state = "MENU"
 
@@ -259,12 +286,12 @@ class GalacticDefender(arcade.Window):
 
     def draw_pause_overlay(self):
         arcade.draw_lrbt_rectangle_filled(0, SCREEN_WIDTH, UI_HEIGHT, SCREEN_HEIGHT, (0, 0, 0, 150))
-        arcade.draw_text("ПАУЗА", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, arcade.color.WHITE, 40, anchor_x="center")
+        self.lbl_paused.draw()
 
     def draw_game_over_screen(self):
         arcade.draw_lrbt_rectangle_filled(0, SCREEN_WIDTH, UI_HEIGHT, SCREEN_HEIGHT, (100, 0, 0, 200))
-        arcade.draw_text("GAME OVER", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 30, arcade.color.RED, 50, anchor_x="center",
-                         bold=True)
+        self.lbl_gameover.draw()
+
         arcade.draw_text(f"SCORE: {self.score}", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 20, arcade.color.WHITE, 20,
                          anchor_x="center")
         arcade.draw_text("ENTER - Retry", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 60, arcade.color.GRAY, 14,

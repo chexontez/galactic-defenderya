@@ -12,20 +12,18 @@ class Player(arcade.Sprite):
         self.heat = 0
         self.overheated = False
         self.super_shot_timer = SUPER_SHOT_COOLDOWN
+        self.flash_timer = 0.0
 
     def update(self, delta_time: float = 1 / 60):
-        # Движение
         self.center_x += self.change_x
 
-        # Ограничение движения границами экрана
         if self.left < 0:
             self.left = 0
         elif self.right > SCREEN_WIDTH:
             self.right = SCREEN_WIDTH
 
-        # Остывание оружия
         if self.heat > 0:
-            self.heat -= 15 * delta_time  # COOLING_RATE
+            self.heat -= 15 * delta_time  # Остывание
             if self.heat < 0: self.heat = 0
 
         if self.overheated and self.heat < 10:
@@ -35,16 +33,14 @@ class Player(arcade.Sprite):
             self.super_shot_timer += delta_time
 
         if self.color == (255, 0, 0):
-            # Если ты пришлешь документацию по частицам, переделаем это на ParticleSystem
-            self.flash_timer -= delta_time  # Нужно создать flash_timer = 1.0 в __init__
+            self.flash_timer -= delta_time
             if self.flash_timer <= 0:
                 self.color = (255, 255, 255)
-                self.flash_timer = 1.0
 
     def shoot(self):
         if self.overheated:
             return False
-        self.heat += 20
+        self.heat += 15
         if self.heat >= 100:
             self.heat = 100
             self.overheated = True

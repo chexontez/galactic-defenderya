@@ -15,7 +15,6 @@ class GameLauncher(QMainWindow):
         self.sumbit.clicked.connect(self.launch_game)
 
     def launch_game(self):
-        # Исправлено: берем текст из правильных полей 'width' и 'height'
         try:
             w = int(self.width.text())
             h = int(self.height.text())

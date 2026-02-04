@@ -1,0 +1,8 @@
+{
+    "screen_width": 800,
+    "screen_height": 600,
+    "player_speed": 5,
+    "enemy_speed": 2,
+    "laser_speed": 7,
+    "player_hp": 5
+}
